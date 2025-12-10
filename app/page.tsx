@@ -54,11 +54,11 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [statusMessage, setStatusMessage] = useState("");
-  const [source, setSource] = useState("stallholder"); 
+  const [source, setSource] = useState("stallholder");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // jelzi, hogy a komponens már kliensen fut (hydration fix)
+  // csak kliensen fusson a dinamikus rész (hydration fix)
   useEffect(() => {
     setHasMounted(true);
   }, []);
@@ -136,6 +136,7 @@ export default function Page() {
   return (
     <>
       <main className="page">
+        {/* háttérvideó */}
         <video
           className="bg-video"
           src="/background.mp4"
@@ -145,8 +146,10 @@ export default function Page() {
           playsInline
         />
 
+        {/* háttérzene */}
         <audio ref={audioRef} src="/background.mp3" autoPlay loop muted />
 
+        {/* mute / unmute gomb */}
         <button
           className={`mute-button ${muted ? "wiggle" : ""}`}
           onClick={toggleMute}
@@ -155,14 +158,21 @@ export default function Page() {
         </button>
 
         <div className="content-box">
-          <h1 className="headline">Something new is coming to your market…</h1>
+          {/* HERO HEADLINE saját blur-dobozban */}
+          <div className="hero-blur">
+            <h1 className="hero-text">
+              Something new is coming to your market…
+            </h1>
+          </div>
 
+          {/* rotáló teaser szövegek */}
           {hasMounted && (
             <p key={teaserIndex} className="teaser-line">
               {teaserMessages[teaserIndex]}
             </p>
           )}
 
+          {/* countdown */}
           {hasMounted && (
             <div className="countdown">
               <TimeBox label="Days" value={timeLeft.days} />
@@ -175,24 +185,27 @@ export default function Page() {
           <p className="sub">
             Sign up and we&apos;ll notify you the moment ClueMart launches.
           </p>
-			
-		<div className="source-toggle">
-  <button
-    type="button"
-    className={source === "stallholder" ? "toggle active" : "toggle"}
-    onClick={() => setSource("stallholder")}
-  >
-    Stallholder
-  </button>
 
-  <button
-    type="button"
-    className={source === "organiser" ? "toggle active" : "toggle"}
-    onClick={() => setSource("organiser")}
-  >
-    Organiser
-  </button>
-</div>
+          {/* Stallholder / Organiser váltó */}
+          <div className="source-toggle">
+            <button
+              type="button"
+              className={source === "stallholder" ? "toggle active" : "toggle"}
+              onClick={() => setSource("stallholder")}
+            >
+              Stallholder
+            </button>
+
+            <button
+              type="button"
+              className={source === "organiser" ? "toggle active" : "toggle"}
+              onClick={() => setSource("organiser")}
+            >
+              Organiser
+            </button>
+          </div>
+
+          {/* email form */}
           <form className="form" onSubmit={handleSubmit}>
             <input
               type="email"
@@ -225,45 +238,19 @@ export default function Page() {
       </main>
 
       <style jsx>{`
-        .source-toggle {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-}
-
-.toggle {
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.35);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  backdrop-filter: blur(4px);
-}
-
-.toggle:hover {
-  background: rgba(255,255,255,0.25);
-}
-
-.toggle.active {
-  background: linear-gradient(135deg, #1fb597, #6b2d78);
-  border-color: rgba(255,255,255,0.55);
-}
-        
+        /* teljes oldal layout */
         .page {
           position: relative;
           min-height: 100vh;
           width: 100%;
           overflow: hidden;
           display: flex;
-          align-items: flex-start;
           justify-content: center;
-          padding-top: 18vh;
-          color: #fff;
-          font-family: system-ui, sans-serif;
+          align-items: flex-start;
+          padding-top: 18vh; /* ettől nem tapad plafonra */
+          color: #ffffff;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+            sans-serif;
         }
 
         .bg-video {
@@ -297,40 +284,76 @@ export default function Page() {
         }
 
         @keyframes wiggle {
-          0% { transform: rotate(0deg); }
-          8% { transform: rotate(-10deg); }
-          15% { transform: rotate(10deg); }
-          22% { transform: rotate(-6deg); }
-          30% { transform: rotate(6deg); }
-          38% { transform: rotate(0deg); }
-          100% { transform: rotate(0deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          8% {
+            transform: rotate(-10deg);
+          }
+          15% {
+            transform: rotate(10deg);
+          }
+          22% {
+            transform: rotate(-6deg);
+          }
+          30% {
+            transform: rotate(6deg);
+          }
+          38% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(0deg);
+          }
         }
 
         .content-box {
+          width: 100%;
           max-width: 720px;
-          width: 90%;
-          padding: 2rem;
+          padding: 0 1.5rem 2.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           text-align: center;
-          border-radius: 22px;
-          background: rgba(0, 0, 0, 0.12);
-          backdrop-filter: blur(6px) saturate(140%);
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
-          margin-top: 2rem;
         }
 
-        .headline {
-          font-size: clamp(2.2rem, 3vw, 3rem);
+        /* csak a hero headline mögött van blur + háttér */
+        .hero-blur {
+          backdrop-filter: blur(10px) saturate(150%);
+          -webkit-backdrop-filter: blur(10px) saturate(150%);
+          background: rgba(0, 0, 0, 0.35);
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          padding: 1.3rem 1.9rem;
+          display: inline-block;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        .hero-text {
+          font-size: clamp(1.6rem, 2.4vw, 2.1rem);
           font-weight: 700;
-          margin-bottom: 1rem;
+          line-height: 1.25;
+          margin: 0;
+          color: #ffffff;
+          text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+        }
+
+        @media (max-width: 600px) {
+          .hero-blur {
+            padding: 1rem 1.4rem;
+          }
+          .hero-text {
+            font-size: 1.6rem;
+          }
         }
 
         .teaser-line {
           margin-bottom: 1.1rem;
-          font-size: 1.35rem;
-          font-weight: 700;
+          font-size: 1.1rem;
+          font-weight: 600;
           color: #fff;
-          padding: 0.4rem 1rem;
+          padding: 0.45rem 1rem;
           border-radius: 12px;
           background: rgba(0, 0, 0, 0.28);
           border: 1px solid rgba(255, 255, 255, 0.35);
@@ -340,10 +363,21 @@ export default function Page() {
         }
 
         @keyframes teaserFade {
-          0% { opacity: 0; transform: translateY(6px); }
-          10% { opacity: 1; transform: translateY(0); }
-          80% { opacity: 1; }
-          100% { opacity: 0; transform: translateY(-4px); }
+          0% {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          10% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          80% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-4px);
+          }
         }
 
         .countdown {
@@ -355,15 +389,44 @@ export default function Page() {
         }
 
         .sub {
-          font-size: 1.15rem;
+          font-size: 1.05rem;
           font-weight: 600;
           margin-bottom: 1.2rem;
           color: #fff;
           background: rgba(0, 0, 0, 0.25);
-          padding: 0.4rem 1rem;
+          padding: 0.45rem 1rem;
           border-radius: 12px;
           backdrop-filter: blur(4px);
           text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+        }
+
+        .source-toggle {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+          margin-bottom: 1.2rem;
+          flex-wrap: wrap;
+        }
+
+        .toggle {
+          padding: 0.55rem 1.1rem;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          color: #fff;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          backdrop-filter: blur(4px);
+        }
+
+        .toggle:hover {
+          background: rgba(255, 255, 255, 0.25);
+        }
+
+        .toggle.active {
+          background: linear-gradient(135deg, #1fb597, #6b2d78);
+          border-color: rgba(255, 255, 255, 0.55);
         }
 
         .form {
@@ -384,6 +447,10 @@ export default function Page() {
           font-size: 0.95rem;
         }
 
+        .input::placeholder {
+          color: rgba(255, 255, 255, 0.8);
+        }
+
         .button {
           padding: 0.75rem 1.5rem;
           border-radius: 999px;
@@ -391,11 +458,20 @@ export default function Page() {
           color: #fff;
           font-weight: 600;
           cursor: pointer;
+          border: none;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .button:hover:enabled {
+          transform: translateY(-1px);
+          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
         }
 
         .button:disabled {
           opacity: 0.7;
           cursor: default;
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
         }
 
         .status-message {
