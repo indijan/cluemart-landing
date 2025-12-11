@@ -338,7 +338,6 @@ export default function Page() {
         .logo-img {
           height: 90px;
           width: auto;
-          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
         }
 
         @media (max-width: 600px) {
