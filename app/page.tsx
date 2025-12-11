@@ -40,7 +40,7 @@ const teaserMessages = [
   "Your stall deserves more attention. Very soon… it will get it.",
   "A market isn’t just stalls — it’s a community.",
   "Something new is coming to local events in Aotearoa.",
-  "Sign up now – be the first to open the future of local markets."
+  "Sign up now – be the first to open the future of local markets.",
 ];
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -54,7 +54,7 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [statusMessage, setStatusMessage] = useState("");
-  const [source, setSource] = useState("stallholder");
+  const [source, setSource] = useState<"stallholder" | "organiser" | "">("");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -73,9 +73,10 @@ export default function Page() {
 
   // teaser szövegek váltása
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTeaserIndex((prev) => (prev + 1) % teaserMessages.length);
-    }, 5000);
+    const interval = setInterval(
+      () => setTeaserIndex((prev) => (prev + 1) % teaserMessages.length),
+      5000
+    );
     return () => clearInterval(interval);
   }, []);
 
@@ -107,6 +108,14 @@ export default function Page() {
       return;
     }
 
+    if (!source) {
+      setStatus("error");
+      setStatusMessage(
+        "Please choose whether you’re a stallholder or an organiser first."
+      );
+      return;
+    }
+
     setStatus("loading");
     setStatusMessage("");
 
@@ -121,15 +130,21 @@ export default function Page() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Something went wrong. Please try again.");
+        throw new Error(
+          data?.error || "Something went wrong. Please try again."
+        );
       }
 
       setStatus("success");
-      setStatusMessage("You’re in! We’ll email you as soon as ClueMart launches.");
+      setStatusMessage(
+        "You’re in! We’ll email you as soon as ClueMart launches."
+      );
       setEmail("");
     } catch (err: any) {
       setStatus("error");
-      setStatusMessage(err.message || "Something went wrong. Please try again.");
+      setStatusMessage(
+        err?.message || "Something went wrong. Please try again."
+      );
     }
   };
 
@@ -145,6 +160,11 @@ export default function Page() {
           loop
           playsInline
         />
+
+        {/* ClueMart logo */}
+        <div className="logo-bar">
+          <img src="/logo.png" alt="ClueMart logo" className="logo-img" />
+        </div>
 
         {/* háttérzene */}
         <audio ref={audioRef} src="/background.mp3" autoPlay loop muted />
@@ -172,15 +192,18 @@ export default function Page() {
             </p>
           )}
 
-          {/* countdown */}
+          {/* countdown – most már blur-dobozban */}
           {hasMounted && (
-            <div className="countdown">
-              <TimeBox label="Days" value={timeLeft.days} />
-              <TimeBox label="Hours" value={timeLeft.hours} />
-              <TimeBox label="Minutes" value={timeLeft.minutes} />
-              <TimeBox label="Seconds" value={timeLeft.seconds} />
-            </div>
-          )}
+  <div className="countdown-wrapper">
+    <p className="countdown-title">ClueMart goes live in</p>
+    <div className="countdown">
+      <TimeBox label="Days" value={timeLeft.days} />
+      <TimeBox label="Hours" value={timeLeft.hours} />
+      <TimeBox label="Minutes" value={timeLeft.minutes} />
+      <TimeBox label="Seconds" value={timeLeft.seconds} />
+    </div>
+  </div>
+)}
 
           <p className="sub">
             Sign up and we&apos;ll notify you the moment ClueMart launches.
@@ -191,7 +214,13 @@ export default function Page() {
             <button
               type="button"
               className={source === "stallholder" ? "toggle active" : "toggle"}
-              onClick={() => setSource("stallholder")}
+              onClick={() => {
+                setSource("stallholder");
+                if (status === "error") {
+                  setStatus("idle");
+                  setStatusMessage("");
+                }
+              }}
             >
               Stallholder
             </button>
@@ -199,11 +228,28 @@ export default function Page() {
             <button
               type="button"
               className={source === "organiser" ? "toggle active" : "toggle"}
-              onClick={() => setSource("organiser")}
+              onClick={() => {
+                setSource("organiser");
+                if (status === "error") {
+                  setStatus("idle");
+                  setStatusMessage("");
+                }
+              }}
             >
               Organiser
             </button>
           </div>
+
+          {/* status üzenet fent az input felett */}
+          {status !== "idle" && statusMessage && (
+            <p
+              className={`status-message ${
+                status === "success" ? "status-success" : "status-error"
+              }`}
+            >
+              {statusMessage}
+            </p>
+          )}
 
           {/* email form */}
           <form className="form" onSubmit={handleSubmit}>
@@ -214,26 +260,24 @@ export default function Page() {
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => {
+                if (!source) {
+                  setStatus("error");
+                  setStatusMessage(
+                    "Please choose if you’re a stallholder or an organiser first."
+                  );
+                }
+              }}
               disabled={status === "loading"}
             />
             <button
               type="submit"
               className="button"
-              disabled={status === "loading"}
+              disabled={status === "loading" || !source}
             >
               {status === "loading" ? "Submitting..." : "Notify me"}
             </button>
           </form>
-
-          {status !== "idle" && statusMessage && (
-            <p
-              className={`status-message ${
-                status === "success" ? "status-success" : "status-error"
-              }`}
-            >
-              {statusMessage}
-            </p>
-          )}
         </div>
       </main>
 
@@ -247,7 +291,7 @@ export default function Page() {
           display: flex;
           justify-content: center;
           align-items: flex-start;
-          padding-top: 18vh; /* ettől nem tapad plafonra */
+          padding-top: 18vh;
           color: #ffffff;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
             sans-serif;
@@ -262,6 +306,45 @@ export default function Page() {
           transform: translate(-50%, -50%);
           object-fit: cover;
           z-index: -2;
+          opacity: 0;
+          animation: fadeInVideo 0.6s ease-out forwards;
+        }
+
+        /* videó kontrollok elrejtése */
+        .bg-video::-webkit-media-controls {
+          display: none !important;
+        }
+        .bg-video::-webkit-media-controls-enclosure {
+          display: none !important;
+        }
+        .bg-video::-webkit-media-controls-panel {
+          display: none !important;
+        }
+
+        @keyframes fadeInVideo {
+          to {
+            opacity: 1;
+          }
+        }
+
+        .logo-bar {
+          position: absolute;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 9;
+        }
+
+        .logo-img {
+          height: 90px;
+          width: auto;
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+        }
+
+        @media (max-width: 600px) {
+          .logo-img {
+            height: 62px;
+          }
         }
 
         .mute-button {
@@ -317,7 +400,6 @@ export default function Page() {
           text-align: center;
         }
 
-        /* csak a hero headline mögött van blur + háttér */
         .hero-blur {
           backdrop-filter: blur(10px) saturate(150%);
           -webkit-backdrop-filter: blur(10px) saturate(150%);
@@ -380,13 +462,42 @@ export default function Page() {
           }
         }
 
+        /* countdown blur box */
         .countdown {
           display: flex;
           justify-content: center;
           gap: 1rem;
           margin-bottom: 1.25rem;
           flex-wrap: wrap;
+
+          padding: 1rem 1.4rem;
+          border-radius: 16px;
+          background: rgba(0, 0, 0, 0.32);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
         }
+        
+        .countdown-wrapper {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.6rem 1.3rem;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.countdown-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.95;
+}
 
         .sub {
           font-size: 1.05rem;
@@ -475,16 +586,46 @@ export default function Page() {
         }
 
         .status-message {
-          margin-top: 0.75rem;
-          font-size: 0.9rem;
+          margin-bottom: 0.6rem;
+          font-size: 1rem;
+          padding: 0.6rem 1rem;
+          border-radius: 10px;
+          backdrop-filter: blur(6px);
+        }
+
+        .status-error {
+          color: #ff4d4d;
+          background: rgba(255, 80, 80, 0.15);
+          border: 1px solid rgba(255, 150, 150, 0.4);
+          font-weight: 600;
+          text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
         .status-success {
           color: #b9ffce;
         }
 
-        .status-error {
-          color: #ffb3b3;
+        /* countdown belső elemek */
+        .time-box {
+          min-width: 90px;
+          padding: 0.4rem 0.5rem;
+          border-radius: 12px;
+        }
+
+        .time-value {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #ffffff;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .time-label {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          opacity: 0.9;
+          letter-spacing: 0.1em;
+          margin-top: 0.1rem;
+          color: rgba(255, 255, 255, 0.95);
         }
       `}</style>
     </>
@@ -495,31 +636,9 @@ function TimeBox({ label, value }: { label: string; value: number }) {
   const padded = String(value).padStart(2, "0");
 
   return (
-    <div className="box">
-      <div className="value">{padded}</div>
-      <div className="label">{label}</div>
-
-      <style jsx>{`
-        .box {
-          min-width: 80px;
-          padding: 0.6rem 0.75rem;
-          border-radius: 16px;
-          background: rgba(0, 0, 0, 0.35);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(8px);
-        }
-        .value {
-          font-size: 1.4rem;
-          font-weight: 700;
-        }
-        .label {
-          font-size: 0.7rem;
-          text-transform: uppercase;
-          opacity: 0.8;
-          letter-spacing: 0.08em;
-          margin-top: 0.1rem;
-        }
-      `}</style>
+    <div className="time-box">
+      <div className="time-value">{padded}</div>
+      <div className="time-label">{label}</div>
     </div>
   );
 }
