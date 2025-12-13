@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,6 +18,12 @@ export const metadata: Metadata = {
   description: "Markets and other events soon will be enjoyable",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,9 +31,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Logo at the top (scrolls away naturally) */}
+        <div
+          aria-label="ClueMart logo"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: "24px",
+            paddingBottom: "16px",
+          }}
+        >
+          <Image
+            src="/logo.png"
+            alt="ClueMart"
+            width={180}
+            height={44}
+            priority
+            style={{ height: "auto", width: "180px" }}
+          />
+        </div>
+
         {children}
       </body>
     </html>

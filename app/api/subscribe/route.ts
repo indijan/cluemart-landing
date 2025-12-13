@@ -15,8 +15,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Acceptable values: stallholder, organiser, fallback: unknown
-    const validSources = ["stallholder", "organiser"];
+    // Acceptable values: stallholder, organiser, visitor — fallback: unknown
+    const validSources = ["stallholder", "organiser", "visitor"];
     const sourceValue = validSources.includes(source)
       ? source
       : "unknown";
